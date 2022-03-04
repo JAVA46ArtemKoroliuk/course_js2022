@@ -2,9 +2,12 @@
   "ExpandedNodes": [
     "",
     "\\src",
+    "\\src\\config",
     "\\src\\models",
     "\\src\\services",
-    "\\src\\ui"
+    "\\src\\ui",
+    "\\src\\utils"
   ],
+  "SelectedNode": "\\src\\main.js",
   "PreviewInSolutionExplorer": false
 }

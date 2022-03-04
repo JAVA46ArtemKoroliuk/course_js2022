@@ -8,7 +8,7 @@ export default class Courses {
     #minId
     #maxId
     constructor(minId, maxId, courses) {
-        this.#courses =  courses ?? [];
+        this.#courses = courses ?? [];
         this.#minId = minId ?? 1;
         this.#maxId = maxId ?? 10000000;
 
@@ -23,11 +23,13 @@ export default class Courses {
         let id;
         do {
             id = getRandomNumber(this.#minId, this.#maxId)
-        }while(this.exists(id));
+        } while (this.exists(id));
         return id;
     }
     exists(id) {
-        //TODO checks if a course with the given id exists
-        return false;
+        return !!this.#courses.find(c => c.id === id);
+    }
+    get() {
+        return this.#courses;
     }
 }
