@@ -11,10 +11,10 @@ export default class FormHandler {
         this.#formElement.addEventListener('submit', event => {
             event.preventDefault();
             const data = Array.from(this.#inputElements)
-                .reduce((obj, element) => {
-                    obj[element.name] = element.value;
-                    return obj;
-                }, {})
+            .reduce((obj, element) => {
+                obj[element.name] = element.value;
+                return obj;
+            }, {})
             const message = fnProcessor(data);
             if (!message) {
                 this.#formElement.reset(); //everything ok
@@ -25,13 +25,13 @@ export default class FormHandler {
                 <strong>Error!</strong> ${message}.
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>`;
-                this.#alertElement.innerHTML = alert;
+            this.#alertElement.innerHTML = alert;
             }
         })
     }
-    fillOptions(idOptions, options) {
-        document.getElementById(idOptions).innerHTML +=
-            `${getOptions(options)}`
+    fillOptions(idOptions, options ) {
+        document.getElementById(idOptions).innerHTML += 
+        `${getOptions(options)}`
     }
     show() {
         this.#formElement.hidden = false;
