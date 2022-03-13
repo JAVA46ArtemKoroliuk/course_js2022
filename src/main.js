@@ -3,47 +3,96 @@ import College from './services/college';
 import Courses from './services/courses';
 import FormHandler from './ui/form_handler';
 import TableHandler from './ui/table_handler';
-import _ from 'lodash'
 import { getRandomCourse } from './utils/randomCourse';
+import _ from 'lodash'
+import NavigatorButtons from './ui/navigator_buttons';
+import Spinner from './ui/spinner';
 const N_COURSES = 5;
-function createCourses() {
-    const courses = [];
-    for (let i = 0; i < N_COURSES; i++) {
-        courses.push(getRandomCourse(courseData));
-    }
-    return courses;
-}
+const statisticsColumnDefinition = [
+    { key: "minInterval", displayName: "From" },
+    { key: "maxInterval", displayName: "To" },
+    { key: "amount", displayName: "Amount" }
+]
 
 
-const courses = createCourses();
-
-const dataProvider = new Courses(courseData.minId, courseData.maxId, courses);
+const dataProvider = new Courses(courseData.minId, courseData.maxId);
 const dataProcessor = new College(dataProvider, courseData);
+const spinner=new Spinner(spin)
 const tableHandler = new TableHandler([
     { key: 'id', displayName: 'ID' },
-    { key: 'name', displayName: 'Course Name' },
-    { key: 'lecturer', displayName: 'Lecturer Name' },
+    { key: 'name', displayName: 'Course' },
+    { key: 'lecturer', displayName: 'Lecturer' },
     { key: 'cost', displayName: "Cost (ILS)" },
-    { key: 'hours', displayName: "Course Duration (h)" }
-], "courses-table");
+    { key: 'hours', displayName: "Duration (h)" }
+], "courses-table", "sortCourses", "removeCourse");
 const formHandler = new FormHandler("courses-form", "alert");
-formHandler.addHandler(course => {
-    const res = dataProcessor.addCourse(course);
+const generationHandler = new FormHandler("generation-form", "alert");
+const navigator = new NavigatorButtons(["0","1","2", "3", "4"])
+
+formHandler.addHandler(async course => {
+    const res = await spinner.runSpinner(dataProcessor.addCourse(course));
     if (typeof (res) !== 'string') {
         return '';
     }
     return res;
 
 })
+generationHandler.addHandler( async generation => {
+    for (let i=0; i < generation.nCourses; i++) {
+        await spinner.runSpinner( dataProcessor.addCourse(getRandomCourse(courseData)));
+    }
+    return '' ; 
+})
 formHandler.fillOptions("course-name-options", courseData.courses);
 formHandler.fillOptions("lecturer-options", courseData.lectors);
-
-window.showForm = () => {
-    formHandler.show();
+const tableHoursStatistics =
+    new TableHandler(statisticsColumnDefinition, "courses-table");
+const tableCostStatistics =
+    new TableHandler(statisticsColumnDefinition, "courses-table");
+function hide() {
     tableHandler.hideTable();
-}
-window.showCourses = () => {
-    tableHandler.showTable(_.sortBy( dataProcessor.getAllCourses(), ['name'], 'id'));
     formHandler.hide();
+    generationHandler.hide();
+    tableHoursStatistics.hideTable();
+    tableCostStatistics.hideTable();
+
 }
-window.sortCourses
+window.showGeneration = () => {
+    hide();
+    navigator.setActive(4);
+    generationHandler.show();
+}
+window.showForm = () => {
+    hide();
+    navigator.setActive(0);
+    formHandler.show();
+
+}
+window.showCourses = async () => {
+    hide();
+    navigator.setActive(1);
+    tableHandler.showTable(await spinner.runSpinner( dataProcessor.getAllCourses()));
+
+}
+window.showHoursStatistics = async () => {
+    hide()
+    navigator.setActive(2);
+    tableHoursStatistics.showTable(await spinner.runSpinner( dataProcessor.getHoursStatistics(courseData.hoursInterval)));
+
+}
+window.showCostStatistics = async () => {
+    hide()
+    navigator.setActive(3);
+    tableCostStatistics.showTable(await spinner.runSpinner( dataProcessor.getCostStatistics(courseData.costInterval)));
+
+}
+window.sortCourses = async(key) => {
+    tableHandler.showTable(await spinner.runSpinner( dataProcessor.sortCourses(key)))
+}
+window.removeCourse = async (id) => {
+    if (window.confirm(`you are going to remove course id: ${id}`)) {
+        await spinner.runSpinner( dataProcessor.removeCourse(+id));
+        tableHandler.showTable(await spinner.runSpinner( dataProcessor.getAllCourses()));
+    }
+
+}
